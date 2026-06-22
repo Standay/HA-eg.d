@@ -57,7 +57,7 @@ V portálu Distribuce24 / EG.D si v části vzdáleného přístupu OpenAPI vyge
 - EAN/EIC odběrného místa,
 - kód profilu, například `ICC1`, `ICQ2`, `ISC1` nebo `ISQ2`.
 
-Integrace data načítá jednou denně, protože EG.D měřená data aktualizuje denně a dokumentace varuje před zbytečně častým voláním API. Rozsah dotazu vždy končí nejpozději včera ve 23:45 UTC, protože EG.D odmítá hodnoty `from`/`to` zasahující do dnešního dne.
+Integrace data načítá jednou denně, protože EG.D měřená data aktualizuje denně a dokumentace varuje před zbytečně častým voláním API. Rozsah dotazu vždy končí nejpozději včera ve 23:45 v časové zóně Europe/Prague a do API se posílá přepočtený UTC čas, protože EG.D odmítá hodnoty `from`/`to` zasahující do dnešního lokálního dne.
 
 ## Řešení problémů
 
@@ -68,4 +68,5 @@ Zkontrolujte hlavně:
 - že používáte `client_id` a `client_secret` pro vzdálený přístup OpenAPI,
 - že v EG.D / Distribuce24 portálu je vzdálený přístup aktivní,
 - že Home Assistant má přístup na `https://idm.distribuce24.cz` a `https://data.distribuce24.cz`,
-- že profil odpovídá tomu, co vám API pro dané odběrné místo vrací; pro typ měření C1 zkuste nejdřív `ICC1`.
+- že profil odpovídá tomu, co vám API pro dané odběrné místo vrací; pro typ měření C1 zkuste nejdřív `ICC1`,
+- že používáte verzi integrace s opravou časové zóny, která neposílá v letním čase `to` jako 23:45 UTC, protože to u EG.D může spadnout do dnešního lokálního dne.
