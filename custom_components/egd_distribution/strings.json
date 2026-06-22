@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EG.D Distribution OpenAPI",
+        "description": "Zadejte údaje vzdáleného přístupu z portálu Distribuce24/EG.D.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client secret",
+          "ean": "EAN/EIC odběrného místa",
+          "profile": "Profil (C1 dlouhý kód z číselníku; A/B např. ICC1, ICQ2, ISC1, ISQ2)",
+          "days": "Počet dní k načtení",
+          "token_url": "Token URL",
+          "api_url": "API URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nepodařilo se připojit k EG.D API nebo ověřit údaje."
+    },
+    "abort": {
+      "already_configured": "Toto odběrné místo a profil už jsou nastavené."
+    }
+  }
+}
