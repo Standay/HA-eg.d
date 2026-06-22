@@ -1,27 +1,45 @@
-# EG.D Distribution for Home Assistant
+# EG.D Distribution pro Home Assistant
 
-Custom integration for reading measured electricity profile data from the EG.D / Distribuce24 OpenAPI.
+Custom integrace pro načítání profilových dat spotřeby/dodávky elektřiny z EG.D / Distribuce24 OpenAPI.
 
-## Features
+## Nejjednodušší instalace přes HACS
 
-- OAuth2 client-credentials authentication against `https://idm.distribuce24.cz/oauth/token`.
-- Reads profile values from `https://data.distribuce24.cz/rest/spotreby`.
-- Creates sensors for the latest valid measurement and a sum over the configured time window.
-- Supports common EG.D profile codes, for example `ICQ2` for active consumption energy in kWh and `ISQ2` for active delivery energy in kWh.
+Tento repozitář je připravený jako **HACS custom repository**, takže není potřeba ručně kopírovat složku `custom_components`.
 
-## Installation
+1. V Home Assistant otevřete **HACS → Integrations**.
+2. Vpravo nahoře klikněte na **⋮ → Custom repositories**.
+3. Do pole **Repository** vložte URL tohoto GitHub repozitáře.
+4. V poli **Category** vyberte **Integration**.
+5. Klikněte na **Add**.
+6. Vyhledejte **EG.D Distribution** a klikněte na **Download**.
+7. Restartujte Home Assistant.
+8. Přidejte integraci přes **Settings → Devices & services → Add integration → EG.D Distribution**.
 
-Copy `custom_components/egd_distribution` to the `custom_components` directory in your Home Assistant config directory and restart Home Assistant.
+> Pokud HACS ještě nemáte, nainstalujte jej podle oficiální dokumentace HACS. Po instalaci HACS už další aktualizace této integrace půjdou provádět přímo z UI Home Assistantu.
 
-Then add **EG.D Distribution** from **Settings → Devices & services → Add integration**.
+## Ruční instalace, jen pokud nechcete HACS
 
-## Configuration
+Zkopírujte složku `custom_components/egd_distribution` do složky `custom_components` ve vaší konfiguraci Home Assistantu a restartujte Home Assistant.
 
-You need credentials generated in the Distribuce24 portal under remote access / OpenAPI:
+## Co integrace umí
 
-- `client_id`
-- `client_secret`
-- EAN/EIC of the metering point
-- Profile code, for example `ICQ2`, `ISQ2`, `ICC1`, or `ISC1`
+- OAuth2 `client_credentials` autentizace proti `https://idm.distribuce24.cz/oauth/token`.
+- Načítání profilových hodnot z `https://data.distribuce24.cz/rest/spotreby`.
+- Senzor poslední platné naměřené hodnoty.
+- Senzor součtu platných hodnot za nastavené období.
+- Podpora běžných profilů EG.D, například:
+  - `ICQ2` – činná spotřeba ze sítě v kWh,
+  - `ISQ2` – činná dodávka/přetok do sítě v kWh,
+  - `ICC1` – činná spotřeba jako čtvrthodinový výkon v kW,
+  - `ISC1` – činná dodávka jako čtvrthodinový výkon v kW.
 
-EG.D updates data daily. The integration polls once per day to avoid unnecessary load on the distributor API.
+## Konfigurace
+
+V portálu Distribuce24 / EG.D si v části vzdáleného přístupu OpenAPI vygenerujte:
+
+- `client_id`,
+- `client_secret`,
+- EAN/EIC odběrného místa,
+- kód profilu, například `ICQ2`, `ISQ2`, `ICC1` nebo `ISC1`.
+
+Integrace data načítá jednou denně, protože EG.D měřená data aktualizuje denně a dokumentace varuje před zbytečně častým voláním API.
