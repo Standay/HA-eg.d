@@ -43,10 +43,19 @@ class EGDDistributionApi:
         self._access_token: str | None = None
         self._expires_at: datetime | None = None
 
-    async def async_test_connection(self, ean: str, profile: str) -> None:
-        """Validate credentials by fetching a small recent window."""
-        now = datetime.now(UTC)
-        await self.async_get_measurements(ean, profile, now - timedelta(days=2), now, page_size=1)
+    async def async_test_connection(self) -> None:
+        """Validate credentials without requiring recent metering data to exist.
+
+        EG.D updates measurements daily and some valid EAN/profile combinations may
+        legitimately return no recent samples. The config flow therefore verifies
+        only that OAuth credentials work and that the data API accepts the token.
+        """
+        token = await self._async_get_token()
+        await self._async_request_json(
+            "GET",
+            f"{self._api_url}/statusy",
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     async def async_get_measurements(
         self,
@@ -113,7 +122,11 @@ class EGDDistributionApi:
                 if response.status >= 400:
                     message = await response.text()
                     raise EGDDistributionApiError(f"EG.D API returned HTTP {response.status}: {message}")
-                return await response.json()
+                try:
+                    return await response.json()
+                except Exception as err:
+                    message = await response.text()
+                    raise EGDDistributionApiError(f"EG.D API returned invalid JSON: {message}") from err
         except TimeoutError as err:
             raise EGDDistributionApiError("Timeout while communicating with EG.D API") from err
         except ClientError as err:

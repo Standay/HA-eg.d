@@ -30,7 +30,7 @@ class EGDDistributionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_TOKEN_URL],
                         user_input[CONF_API_URL],
                     )
-                    await api.async_test_connection(user_input[CONF_EAN], user_input[CONF_PROFILE])
+                    await api.async_test_connection()
             except EGDDistributionApiError:
                 errors["base"] = "cannot_connect"
             else:
