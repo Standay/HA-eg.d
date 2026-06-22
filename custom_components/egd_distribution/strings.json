@@ -8,7 +8,7 @@
           "client_id": "Client ID",
           "client_secret": "Client secret",
           "ean": "EAN/EIC odběrného místa",
-          "profile": "Profil / typ hodnoty (pro typ měření C1 obvykle ICC1, pro energii kWh ICQ2)",
+          "profile": "Profil (např. ICQ2 spotřeba kWh, ISQ2 dodávka kWh)",
           "days": "Počet dní k načtení",
           "token_url": "Token URL",
           "api_url": "API URL"

@@ -72,25 +72,19 @@ class EGDLatestSensor(EGDBaseSensor):
 
 
 class EGDSumSensor(EGDBaseSensor):
-    """Energy calculated from valid values in the configured window."""
+    """Sum of valid values in the configured window."""
 
-    _attr_name = "Window energy"
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_name = "Window sum"
+    _attr_state_class = SensorStateClass.TOTAL
 
     def __init__(self, coordinator: EGDDistributionCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "window_energy")
-        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-        self._attr_device_class = SensorDeviceClass.ENERGY
+        super().__init__(coordinator, entry, "window_sum")
 
     @property
     def native_value(self) -> float | None:
         data = self.coordinator.data or []
         valid = [item.value for item in data if item.status in (None, VALID_STATUS)]
-        if not valid:
-            return None
-        if self.coordinator.profile.upper() in POWER_PROFILES:
-            return round(sum(valid) / 4, 6)
-        return round(sum(valid), 6)
+        return round(sum(valid), 6) if valid else None
 
     @property
     def extra_state_attributes(self) -> dict[str, int | str]:
@@ -98,7 +92,6 @@ class EGDSumSensor(EGDBaseSensor):
         return {
             "days": self.coordinator.days,
             "profile": self.coordinator.profile,
-            "calculation": "sum_kw_quarter_hours_divided_by_4" if self.coordinator.profile.upper() in POWER_PROFILES else "sum_values",
             "valid_samples": len([item for item in data if item.status in (None, VALID_STATUS)]),
             "total_samples": len(data),
         }

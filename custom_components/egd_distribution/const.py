@@ -16,7 +16,7 @@ CONF_API_URL = "api_url"
 
 DEFAULT_TOKEN_URL = "https://idm.distribuce24.cz/oauth/token"
 DEFAULT_API_URL = "https://data.distribuce24.cz/rest"
-DEFAULT_PROFILE = "ICC1"
+DEFAULT_PROFILE = "ICQ2"
 DEFAULT_DAYS = 7
 DEFAULT_SCAN_INTERVAL = timedelta(hours=24)
 

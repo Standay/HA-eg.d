@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 
 from homeassistant.core import HomeAssistant
@@ -31,9 +31,8 @@ class EGDDistributionCoordinator(DataUpdateCoordinator[list[EGDMeasurement]]):
 
     async def _async_update_data(self) -> list[EGDMeasurement]:
         try:
-            yesterday = datetime.now(UTC).date() - timedelta(days=1)
-            end = datetime.combine(yesterday, time(23, 45), UTC)
-            start = datetime.combine(yesterday - timedelta(days=self.days - 1), time.min, UTC)
+            end = datetime.now(UTC)
+            start = end - timedelta(days=self.days)
             return await self.api.async_get_measurements(self.ean, self.profile, start, end)
         except EGDDistributionApiError as err:
             raise UpdateFailed(str(err)) from err
