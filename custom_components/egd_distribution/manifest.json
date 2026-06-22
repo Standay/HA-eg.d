@@ -1,0 +1,11 @@
+{
+  "domain": "egd_distribution",
+  "name": "EG.D Distribution",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/custom-components/egd_distribution",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.1.0"
+}
