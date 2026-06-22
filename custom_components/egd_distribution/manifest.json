@@ -1,11 +1,14 @@
 {
   "domain": "egd_distribution",
   "name": "EG.D Distribution",
-  "codeowners": [],
+  "codeowners": [
+    "@Standay"
+  ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/custom-components/egd_distribution",
+  "documentation": "https://github.com/Standay/HA-eg.d",
+  "issue_tracker": "https://github.com/Standay/HA-eg.d/issues",
   "iot_class": "cloud_polling",
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
