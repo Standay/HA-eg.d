@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
-from homeassistant.components.recorder.statistics import async_add_external_statistics, get_last_statistics
+from homeassistant.components.recorder.statistics import async_add_external_statistics, statistics_during_period
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 
@@ -43,35 +44,20 @@ async def async_import_energy_statistics(
     if not hourly_energy:
         return statistic_id, 0
 
-    last_sum = 0.0
-    last_start: datetime | None = None
-    last_stats = await get_instance(hass).async_add_executor_job(
-        get_last_statistics,
+    existing_rows = await get_instance(hass).async_add_executor_job(
+        statistics_during_period,
         hass,
-        1,
-        statistic_id,
-        False,
-        {"sum"},
+        hourly_energy[0][0] - timedelta(hours=1),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
     )
-    if statistic_id in last_stats:
-        row = last_stats[statistic_id][0]
-        last_sum = float(row.get("sum") or 0)
-        last_start = _row_start(row.get("start"))
-
-    statistics: list[StatisticData] = []
-    running_sum = last_sum
-    for start, energy in hourly_energy:
-        if last_start is not None and start <= last_start:
-            continue
-        running_sum += energy
-        statistics.append(
-            StatisticData(
-                start=start,
-                state=round(energy, 6),
-                sum=round(running_sum, 6),
-            )
-        )
-
+    statistics = _statistics_to_import(
+        hourly_energy,
+        existing_rows.get(statistic_id, []),
+    )
     if not statistics:
         return statistic_id, 0
 
@@ -90,6 +76,50 @@ async def async_import_energy_statistics(
     return statistic_id, len(statistics)
 
 
+def _statistics_to_import(
+    hourly_energy: list[tuple[datetime, float]],
+    existing_rows: list[dict[str, Any]],
+) -> list[StatisticData]:
+    """Return hourly statistics with sums rebuilt for the whole import window."""
+    first_start = hourly_energy[0][0]
+    fetched_energy = dict(hourly_energy)
+    combined_energy: dict[datetime, float] = {}
+    baseline_sum = 0.0
+    baseline_start: datetime | None = None
+
+    for row in existing_rows:
+        start = _row_start(row.get("start"))
+        if start is None:
+            continue
+        row_sum = _row_float(row.get("sum"))
+        if start < first_start:
+            if row_sum is not None and (baseline_start is None or start > baseline_start):
+                baseline_start = start
+                baseline_sum = row_sum
+            continue
+
+        state = _row_float(row.get("state"))
+        if state is not None:
+            combined_energy[start] = state
+
+    combined_energy.update(fetched_energy)
+
+    running_sum = baseline_sum
+    statistics: list[StatisticData] = []
+    for start in sorted(combined_energy):
+        if start < first_start:
+            continue
+        running_sum += combined_energy[start]
+        statistics.append(
+            StatisticData(
+                start=start,
+                state=round(combined_energy[start], 6),
+                sum=round(running_sum, 6),
+            )
+        )
+    return statistics
+
+
 def _hourly_energy(measurements: list[EGDMeasurement], profile: str) -> list[tuple[datetime, float]]:
     hourly: defaultdict[datetime, float] = defaultdict(float)
     for item in measurements:
@@ -105,4 +135,10 @@ def _row_start(value: object) -> datetime | None:
         return value.astimezone(UTC)
     if isinstance(value, int | float):
         return datetime.fromtimestamp(value, UTC)
+    return None
+
+
+def _row_float(value: object) -> float | None:
+    if isinstance(value, int | float):
+        return float(value)
     return None

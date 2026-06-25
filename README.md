@@ -65,6 +65,8 @@ V portálu Distribuce24 / EG.D si v části vzdáleného přístupu OpenAPI vyge
 
 Integrace data načítá jednou denně, protože EG.D měřená data aktualizuje denně a dokumentace varuje před zbytečně častým voláním API. Rozsah dotazu vždy končí nejpozději včera ve 23:45 v časové zóně Europe/Prague a do API se posílá přepočtený UTC čas, protože EG.D odmítá hodnoty `from`/`to` zasahující do dnešního lokálního dne.
 
+Profil, zdroj dat, počet dnů k načtení a endpointy lze později změnit přes **Settings → Devices & services → EG.D Distribution → Configure**. Není nutné integraci mazat a znovu zadávat `client_id`, `client_secret` a EAN.
+
 ## Senzory a Energy dashboard
 
 Integrace rozlišuje běžné zobrazovací senzory od dlouhodobých statistik:
@@ -74,7 +76,7 @@ Integrace rozlišuje běžné zobrazovací senzory od dlouhodobých statistik:
 - **Yesterday energy** je součet za poslední kompletní lokální den vrácený API.
 - **Last data timestamp** a **Data coverage** jsou diagnostické senzory pro kontrolu stáří a úplnosti dat.
 
-Pro Energy dashboard integrace z validních 15min hodnot vytváří hodinové externí statistiky v kWh. Při prvním spuštění se importuje rozsah podle nastaveného pole **Počet dnů k načtení**; další běhy doplňují jen novější hodiny. Pokud chcete větší historický základ, nastavte před prvním úspěšným načtením vyšší počet dnů, nejvýše 31.
+Pro Energy dashboard integrace z validních 15min hodnot vytváří hodinové externí statistiky v kWh. Při každém úspěšném načtení znovu porovná celé nastavené okno s recorder statistikami a doplní nebo opraví chybějící hodiny. Pokud později zvýšíte **Počet dnů k načtení** například na `31`, integrace při dalším načtení dotáhne starší dostupná data bez mazání integrace.
 
 Pro testovací přístup podle dokumentace změňte **Token URL** na `https://test.distribuce24.cz/idm/oauth/token` a **API URL** na `https://test.distribuce24.cz/openApi`. Ověřený testovací přístup pro EAN `859182400100004000` vrací data přes `/spotreby`; použijte například profil `ICQ2` pro spotřebu v kWh, `ICC1` pro čtvrthodinový výkon v kW nebo `DCQC` pro C1-like spotřebu v kWh. Testovací portál u tohoto přístupu vrací u validních hodnot status `W` a endpointy `/c/statusy`, `/c/profily`, `/c/spotreby` odpovídají `Není dostupné na testovacím portálu`.
 

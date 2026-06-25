@@ -22,5 +22,23 @@
     "abort": {
       "already_configured": "Toto odběrné místo a profil už jsou nastavené."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nastavení EG.D Distribution",
+        "description": "Upravte profil, rozsah načítání nebo endpointy. Client ID, client secret a EAN zůstávají z původního nastavení.",
+        "data": {
+          "profile": "Profil (C1 např. DCQC; A/B např. ICC1, ICQ2, ISC1, ISQ2; dlouhé C1 kódy jen pro /c větev)",
+          "zdroj_dat": "Zdroj dat pro dlouhé C1 kódy (/c větev)",
+          "days": "Počet dní k načtení a doplnění do Energy statistik",
+          "token_url": "Token URL",
+          "api_url": "API URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nepodařilo se připojit k EG.D API nebo ověřit údaje."
+    }
   }
 }
