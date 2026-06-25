@@ -76,7 +76,7 @@ Integrace rozlišuje běžné zobrazovací senzory od dlouhodobých statistik:
 - **Yesterday energy** je součet za poslední kompletní lokální den vrácený API.
 - **Last data timestamp** a **Data coverage** jsou diagnostické senzory pro kontrolu stáří a úplnosti dat.
 
-Pro Energy dashboard integrace z validních 15min hodnot vytváří hodinové externí statistiky v kWh. Při každém úspěšném načtení znovu porovná celé nastavené okno s recorder statistikami a doplní nebo opraví chybějící hodiny. Pokud později zvýšíte **Počet dnů k načtení** například na `31`, integrace při dalším načtení dotáhne starší dostupná data bez mazání integrace.
+Pro Energy dashboard integrace z validních 15min hodnot vytváří hodinové externí statistiky v kWh. Při každém úspěšném načtení znovu porovná celé nastavené okno s recorder statistikami a doplní nebo opraví chybějící hodiny. Pokud později zvýšíte **Počet dnů k načtení** například na `31`, integrace při dalším načtení dotáhne starší dostupná data bez mazání integrace. Pokud EG.D odmítne celé vícedenní okno, integrace zkusí dostupné dny stahovat jednotlivě od nejnovějšího dne směrem zpět.
 
 Pro testovací přístup podle dokumentace změňte **Token URL** na `https://test.distribuce24.cz/idm/oauth/token` a **API URL** na `https://test.distribuce24.cz/openApi`. Ověřený testovací přístup pro EAN `859182400100004000` vrací data přes `/spotreby`; použijte například profil `ICQ2` pro spotřebu v kWh, `ICC1` pro čtvrthodinový výkon v kW nebo `DCQC` pro C1-like spotřebu v kWh. Testovací portál u tohoto přístupu vrací u validních hodnot status `W` a endpointy `/c/statusy`, `/c/profily`, `/c/spotreby` odpovídají `Není dostupné na testovacím portálu`.
 

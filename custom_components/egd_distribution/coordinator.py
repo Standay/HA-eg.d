@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 import logging
 
@@ -55,36 +55,64 @@ class EGDDistributionCoordinator(DataUpdateCoordinator[list[EGDMeasurement]]):
         yesterday = datetime.now(_PRAGUE_TZ).date() - timedelta(days=1)
         end = datetime.combine(yesterday, time(23, 45), _PRAGUE_TZ).astimezone(UTC)
         start = datetime.combine(yesterday - timedelta(days=self.days - 1), time.min, _PRAGUE_TZ).astimezone(UTC)
-        query_ranges = [(start, end)]
-        if self.days > 1:
-            query_ranges.append((datetime.combine(yesterday, time.min, _PRAGUE_TZ).astimezone(UTC), end))
 
-        period_error: str | None = None
-        for query_start, query_end in query_ranges:
-            self.last_query_start = query_start
-            self.last_query_end = query_end
-            try:
-                data = await self.api.async_get_measurements(
-                    self.ean,
-                    self.profile,
-                    query_start,
-                    query_end,
-                    data_source=self.data_source,
-                )
-            except EGDDistributionApiError as err:
-                if _is_period_authorization_error(err):
-                    period_error = str(err)
-                    _LOGGER.warning("EG.D rejected the requested data period: %s", err)
-                    continue
+        try:
+            data = await self._async_fetch_range(start, end)
+        except EGDDistributionApiError as err:
+            if not _is_period_authorization_error(err):
                 raise UpdateFailed(str(err)) from err
+            period_error = str(err)
+            _LOGGER.warning("EG.D rejected the requested data period: %s", err)
+            data = await self._async_fetch_daily_backfill(yesterday)
+            if not data:
+                self.last_error = period_error
+                return self.data or []
+        else:
             self.last_error = None
             await self._async_import_statistics(data)
             return data
 
-        if period_error is not None:
-            self.last_error = period_error
-            return self.data or []
-        return []
+        self.last_error = None
+        await self._async_import_statistics(data)
+        return data
+
+    async def _async_fetch_range(self, start: datetime, end: datetime) -> list[EGDMeasurement]:
+        """Fetch measurements for one UTC range and remember it as the active query."""
+        self.last_query_start = start
+        self.last_query_end = end
+        return await self.api.async_get_measurements(
+            self.ean,
+            self.profile,
+            start,
+            end,
+            data_source=self.data_source,
+        )
+
+    async def _async_fetch_daily_backfill(self, last_day: date) -> list[EGDMeasurement]:
+        """Fetch available days individually when EG.D rejects the full backfill range."""
+        data: list[EGDMeasurement] = []
+        first_start: datetime | None = None
+        last_end: datetime | None = None
+        for day_offset in range(self.days):
+            day = last_day - timedelta(days=day_offset)
+            day_start = datetime.combine(day, time.min, _PRAGUE_TZ).astimezone(UTC)
+            day_end = datetime.combine(day, time(23, 45), _PRAGUE_TZ).astimezone(UTC)
+            try:
+                day_data = await self._async_fetch_range(day_start, day_end)
+            except EGDDistributionApiError as err:
+                if not _is_period_authorization_error(err):
+                    raise UpdateFailed(str(err)) from err
+                _LOGGER.warning("EG.D rejected day %s during backfill: %s", day, err)
+                break
+
+            data.extend(day_data)
+            first_start = day_start if first_start is None else min(first_start, day_start)
+            last_end = day_end if last_end is None else max(last_end, day_end)
+
+        if first_start is not None and last_end is not None:
+            self.last_query_start = first_start
+            self.last_query_end = last_end
+        return sorted(data, key=lambda item: item.timestamp)
 
     async def _async_import_statistics(self, data: list[EGDMeasurement]) -> None:
         """Import fetched interval data into Home Assistant long-term statistics."""
